@@ -28,7 +28,7 @@ from .version_data import get_client_ip, get_change_metadata
 from ..csv_helpers import list_to_csv
 from ..forms import NewPersonForm, ToggleLockForm, ConstituencyRecordWinnerForm
 from ..models import (
-    TRUSTED_TO_LOCK_GROUP_NAME, get_edits_allowed,
+    TRUSTED_TO_LOCK_GROUP_NAME, get_edits_allowed, is_post_locked,
     RESULT_RECORDERS_GROUP_NAME, LoggedAction, PostExtra, OrganizationExtra,
     MembershipExtra, PartySet, SimplePopoloField, ExtraField, PostExtraElection
 )
@@ -38,7 +38,6 @@ from moderation_queue.forms import SuggestedPostLockForm
 from moderation_queue.models import SuggestedPostLock
 
 
-from .helpers import is_post_locked
 from popolo.models import Membership, Post, Organization, Person
 
 
