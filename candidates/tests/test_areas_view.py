@@ -41,8 +41,9 @@ class TestAreasView(TestUserMixin, UK2015ExamplesMixin, WebTest):
             base__label='Member of Parliament for Aldershot',
             party_set=self.gb_parties,
         )
-        self.camberwell_post_extra.candidates_locked = True
-        self.camberwell_post_extra.save()
+        election_extra = self.camberwell_post_extra.postextraelection_set.all()[0]
+        election_extra.candidates_locked = True
+        election_extra.save()
 
     def test_any_area_page_without_login(self):
         response = self.app.get('/areas/WMC--65808/dulwich-and-west-norwood')
