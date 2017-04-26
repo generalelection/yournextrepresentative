@@ -283,11 +283,3 @@ def group_candidates_by_party(election_data, candidacies, show_all=False):
         'party_lists_in_use': party_list,
         'parties_and_people': result
     }
-
-
-def is_post_locked(post, election):
-    return PostExtraElection.objects.filter(
-        postextra__base=post,
-        election=election,
-        candidates_locked=True,
-    ).exists()

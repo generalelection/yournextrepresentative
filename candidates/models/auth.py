@@ -16,6 +16,12 @@ class NameChangeDisallowedException(Exception):
 class ChangeToLockedConstituencyDisallowedException(Exception):
     pass
 
+def is_post_locked(post, election):
+    return post.extra.postextraelection_set.filter(
+        election=election,
+        candidates_locked=True,
+    ).exists()
+
 def get_constituency_lock_from_person_data(user, api, election, person_popit_data):
     """Return whether the constituency is locked and whether this user can edit"""
 
