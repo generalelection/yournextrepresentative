@@ -38,6 +38,7 @@ from moderation_queue.forms import SuggestedPostLockForm
 from moderation_queue.models import SuggestedPostLock
 
 
+from .helpers import is_post_locked
 from popolo.models import Membership, Post, Organization, Person
 
 
@@ -103,14 +104,12 @@ class ConstituencyDetailView(ElectionMixin, TemplateView):
             'label': mp_post.label
         }
 
-        context['candidates_locked'] = False
+        context['candidates_locked'] = is_post_locked(mp_post, self.election_data)
 
         if hasattr(mp_post, 'extra'):
             context['has_lock_suggestion'] = any(
                 [spl.election_for_suggestion for spl in
                 SuggestedPostLock.objects.filter(post_extra=mp_post.extra)])
-
-            context['candidates_locked'] = mp_post.extra.candidates_locked
 
             context['suggest_lock_form'] = SuggestedPostLockForm(
                 initial={
@@ -306,8 +305,13 @@ class ConstituencyLockView(ElectionMixin, GroupRequiredMixin, View):
             with transaction.atomic():
                 post = get_object_or_404(Post, extra__slug=post_id)
                 lock = form.cleaned_data['lock']
-                post.extra.candidates_locked = lock
-                post.extra.save()
+                # FIXME check this exists
+                extra_election = PostExtraElection.objects.get(
+                    postextra__base=post,
+                    election__slug=self.election
+                )
+                extra_election.candidates_locked = lock
+                extra_election.save()
                 post_name = post.extra.short_label
                 if lock:
                     suffix = '-lock'
@@ -347,20 +351,20 @@ class ConstituenciesUnlockedListView(ElectionMixin, TemplateView):
         keys = ('locked', 'unlocked')
         for k in keys:
             context[k] = []
-        posts = Post.objects.filter(
-            extra__elections=self.election_data
-        ).select_related('extra').all()
+        posts = PostExtraElection.objects.filter(
+            election=self.election_data
+        ).select_related('postextra').all()
         for post in posts:
             total_constituencies += 1
-            if post.extra.candidates_locked:
+            if post.candidates_locked:
                 context_field = 'locked'
                 total_locked += 1
             else:
                 context_field = 'unlocked'
             context[context_field].append(
                 {
-                    'id': post.extra.slug,
-                    'name': post.extra.short_label,
+                    'id': post.postextra.slug,
+                    'name': post.postextra.short_label,
                 }
             )
         for k in keys:
@@ -605,7 +609,7 @@ class OrderedPartyListView(ElectionMixin, TemplateView):
             'label': mp_post.label
         }
 
-        context['candidates_locked'] = mp_post.extra.candidates_locked
+        context['candidates_locked'] = is_post_locked(mp_post, self.election_data)
         context['lock_form'] = ToggleLockForm(
             initial={
                 'post_id': post_id,
